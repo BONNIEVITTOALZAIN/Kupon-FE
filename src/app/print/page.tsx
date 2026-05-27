@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { Kupon } from '@/types/kupon';
@@ -12,6 +13,9 @@ export default function PrintPage() {
   const [kupons, setKupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentYearM = new Date().getFullYear();
+  const currentYearH = currentYearM - 579;
 
   useEffect(() => {
     const fetchAndGenerateQR = async () => {
@@ -63,12 +67,12 @@ export default function PrintPage() {
       {/* Non-Printable Header Control Panel */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-40 flex items-center justify-between shadow-sm print:hidden">
         <div className="flex items-center gap-3">
-          <a
+          <Link
             href="/kupons"
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-500 cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5" />
-          </a>
+          </Link>
           <div>
             <h1 className="text-md font-black text-slate-800 dark:text-white flex items-center gap-2">
               Print Preview Kupon Qurban
@@ -120,7 +124,7 @@ export default function PrintPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-black text-slate-800 dark:text-slate-800 uppercase tracking-widest block">
-                      1447 H / 2026 M
+                      {currentYearH} H / {currentYearM} M
                     </span>
                   </div>
                 </div>

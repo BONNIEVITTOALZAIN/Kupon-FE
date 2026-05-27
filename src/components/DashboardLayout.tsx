@@ -56,6 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/users', label: 'Kelola Panitia', icon: <Users className="w-5 h-5" /> },
   ];
 
+  const currentYearM = new Date().getFullYear();
+  const currentYearH = currentYearM - 579;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
       {/* Mobile Navbar */}
@@ -85,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h1 className="font-black text-slate-900 dark:text-white tracking-wide text-md">
               Mushola Al-Mubarokah
             </h1>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">PANITIA QURBAN 1447 H</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">PANITIA QURBAN {currentYearH} H</p>
           </div>
         </div>
 

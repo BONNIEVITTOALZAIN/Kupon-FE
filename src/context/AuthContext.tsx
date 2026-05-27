@@ -40,12 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (!session && pathname !== '/login' && pathname !== '/print') {
+        if (event === 'SIGNED_OUT' && pathname !== '/login' && pathname !== '/print') {
           router.push('/login');
         }
       }

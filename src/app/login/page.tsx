@@ -37,6 +37,9 @@ export default function LoginPage() {
     }
   };
 
+  const currentYearM = new Date().getFullYear();
+  const currentYearH = currentYearM - 579;
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-950 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
       {/* Background decorations */}
@@ -53,7 +56,7 @@ export default function LoginPage() {
               QURBAN KUPON
             </h1>
             <p className="mt-2 text-sm text-emerald-200/80 font-medium">
-              Mushola Al-Mubarokah &middot; Panitia Qurban 1447 H
+              Mushola Al-Mubarokah &middot; Panitia Qurban {currentYearH} H
             </p>
           </div>
 
