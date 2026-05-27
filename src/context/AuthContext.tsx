@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        if (!session && pathname !== '/login') {
+        if (!session && pathname !== '/login' && pathname !== '/print') {
           router.push('/login');
         }
       }

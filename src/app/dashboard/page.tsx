@@ -309,8 +309,8 @@ export default function DashboardPage() {
                         <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
                           {kupon.nama}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-bold truncate">
-                          {kupon.kode} &middot; No. {kupon.nomor}
+                        <p className="text-[10px] text-slate-450 dark:text-slate-500 font-bold truncate">
+                          {kupon.kode} &middot; No. {kupon.nomor} {kupon.scanned_by && ` &middot; 👤 ${kupon.scanned_by.split('@')[0]}`}
                         </p>
                       </div>
                     </div>

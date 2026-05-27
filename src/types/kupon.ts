@@ -9,6 +9,7 @@ export interface Kupon {
   tipe: TipeKupon;
   status: StatusKupon;
   used_at: string | null;
+  scanned_by?: string | null;
   created_at: string;
   qrDataUrl?: string; // Client-side generated or fetched QR data
 }

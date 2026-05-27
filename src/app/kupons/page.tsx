@@ -19,11 +19,14 @@ import {
   Loader2,
   AlertTriangle,
   ExternalLink,
+  RotateCcw,
+  QrCode,
 } from 'lucide-react';
+import QRCode from 'qrcode';
 
 export default function KuponsPage() {
   const { getToken } = useAuth();
-  
+
   // Data list & state
   const [kupons, setKupons] = useState<Kupon[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -45,6 +48,10 @@ export default function KuponsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isDeleteAllConfirmOpen, setIsDeleteAllConfirmOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -60,6 +67,57 @@ export default function KuponsPage() {
   // PDF & Excel download state
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [excelExporting, setExcelExporting] = useState(false);
+  const [massActionLoading, setMassActionLoading] = useState(false);
+
+  const openQrModal = async (kupon: Kupon) => {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(kupon.kode, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+      });
+      setQrCodeDataUrl(qrDataUrl);
+      setFormData({
+        id: kupon.id,
+        nomor: kupon.nomor,
+        nama: kupon.nama || '',
+        tipe: kupon.tipe,
+        status: kupon.status,
+      });
+      setIsQrModalOpen(true);
+    } catch (err) {
+      alert('Gagal membuat QR Code.');
+    }
+  };
+
+  const handleResetAllStatus = async () => {
+    setMassActionLoading(true);
+    try {
+      const token = getToken();
+      await api.resetAllKuponsStatus(token);
+      setIsResetConfirmOpen(false);
+      fetchKupons();
+    } catch (err: any) {
+      alert(err.message || 'Gagal mereset status kupon.');
+    } finally {
+      setMassActionLoading(false);
+    }
+  };
+
+  const handleDeleteAllKupons = async () => {
+    setMassActionLoading(true);
+    try {
+      const token = getToken();
+      await api.deleteAllKupons(token);
+      setIsDeleteAllConfirmOpen(false);
+      setPage(1);
+      fetchKupons();
+    } catch (err: any) {
+      alert(err.message || 'Gagal menghapus semua kupon.');
+    } finally {
+      setMassActionLoading(false);
+    }
+  };
 
   const fetchKupons = async () => {
     setLoading(true);
@@ -234,11 +292,11 @@ export default function KuponsPage() {
               Buat, edit, hapus, dan unduh data kupon qurban.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportExcel}
               disabled={excelExporting}
-              className="inline-flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
               Excel
@@ -246,14 +304,28 @@ export default function KuponsPage() {
             <button
               onClick={handleDownloadPDF}
               disabled={pdfGenerating}
-              className="inline-flex items-center justify-center gap-2 bg-indigo-500/10 text-indigo-600 dark:text-indigo-450 border border-indigo-500/20 hover:bg-indigo-500/20 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-indigo-500/10 text-indigo-600 dark:text-indigo-450 border border-indigo-500/20 hover:bg-indigo-500/20 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               Cetak PDF
             </button>
             <button
+              onClick={() => setIsResetConfirmOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-amber-550/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reset Status
+            </button>
+            <button
+              onClick={() => setIsDeleteAllConfirmOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-rose-500/10 text-rose-600 dark:text-rose-450 border border-rose-500/20 hover:bg-rose-500/20 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              Hapus Semua
+            </button>
+            <button
               onClick={openCreateModal}
-              className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Kupon Baru
@@ -383,35 +455,51 @@ export default function KuponsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                            kupon.tipe === 'extra'
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
-                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-450'
-                          }`}
+                          className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase ${kupon.tipe === 'extra'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
+                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-450'
+                            }`}
                         >
                           {kupon.tipe}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                            kupon.status === 'sudah'
-                              ? 'bg-teal-100 text-teal-700 dark:bg-teal-950/20 dark:text-teal-400'
-                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                          }`}
+                          className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase ${kupon.status === 'sudah'
+                            ? 'bg-teal-100 text-teal-700 dark:bg-teal-950/20 dark:text-teal-400'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                            }`}
                         >
                           {kupon.status === 'sudah' ? 'Sudah Diambil' : 'Belum Diambil'}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-bold text-slate-500 dark:text-slate-400">
-                        {kupon.used_at
-                          ? new Date(kupon.used_at).toLocaleString('id-ID', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })
-                          : '-'}
+                        {kupon.used_at ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span>
+                              {new Date(kupon.used_at).toLocaleString('id-ID', {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              })}
+                            </span>
+                            {kupon.scanned_by && (
+                              <span className="text-[10px] text-emerald-650 dark:text-emerald-400 font-extrabold uppercase tracking-wide truncate max-w-[150px]" title={`Di-scan oleh: ${kupon.scanned_by}`}>
+                                👤 {kupon.scanned_by.split('@')[0]}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right space-x-1.5 flex justify-end">
+                        <button
+                          onClick={() => openQrModal(kupon)}
+                          title="Lihat QR Code"
+                          className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg cursor-pointer"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => openEditModal(kupon)}
                           className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
@@ -495,22 +583,20 @@ export default function KuponsPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, tipe: 'terdaftar' })}
-                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        formData.tipe === 'terdaftar'
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
-                      }`}
+                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${formData.tipe === 'terdaftar'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+                        }`}
                     >
                       🕌 TERDAFTAR
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, tipe: 'extra', nama: 'EXTRA' })}
-                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        formData.tipe === 'extra'
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
-                      }`}
+                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${formData.tipe === 'extra'
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+                        }`}
                     >
                       ✨ EXTRA
                     </button>
@@ -619,22 +705,20 @@ export default function KuponsPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, status: 'belum' })}
-                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        formData.status === 'belum'
-                          ? 'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
-                      }`}
+                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${formData.status === 'belum'
+                        ? 'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
+                        }`}
                     >
                       ⏳ BELUM
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, status: 'sudah' })}
-                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        formData.status === 'sudah'
-                          ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
-                      }`}
+                      className={`py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${formData.status === 'sudah'
+                        ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
+                        }`}
                     >
                       ✅ SUDAH
                     </button>
@@ -684,7 +768,128 @@ export default function KuponsPage() {
             </div>
           </div>
         )}
-      </div>
+            {/* ================================================= */}
+            {/* MODAL 4: RESET STATUS CONFIRMATION */}
+            {/* ================================================= */}
+            {isResetConfirmOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl w-full max-w-md p-6 relative flex flex-col shadow-2xl">
+                  <h3 className="text-lg font-black text-slate-850 dark:text-white mb-2 flex items-center gap-2">
+                    <RotateCcw className="w-5 h-5 text-amber-500" />
+                    Reset Semua Status Kupon?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-semibold">
+                    Apakah Anda yakin ingin mereset semua status pengambilan kupon menjadi <strong>Belum Diambil</strong>? Seluruh data riwayat scan waktu dan nama petugas pemindai akan dibersihkan. Tindakan ini tidak dapat dibatalkan.
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setIsResetConfirmOpen(false)}
+                      disabled={massActionLoading}
+                      className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleResetAllStatus}
+                      disabled={massActionLoading}
+                      className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold rounded-xl text-xs cursor-pointer flex items-center justify-center"
+                    >
+                      {massActionLoading ? <Loader2 className="animate-spin w-4.5 h-4.5 text-white" /> : 'Ya, Reset Semua'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================================================= */}
+            {/* MODAL 5: DELETE ALL CONFIRMATION */}
+            {/* ================================================= */}
+            {isDeleteAllConfirmOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl w-full max-w-md p-6 relative flex flex-col shadow-2xl">
+                  <h3 className="text-lg font-black text-rose-600 dark:text-rose-450 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    HAPUS SEMUA DATA KUPON?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-semibold">
+                    ⚠️ <strong>PERINGATAN KERAS!</strong> Apakah Anda benar-benar yakin ingin menghapus <strong>seluruh data kupon</strong> dari database secara permanen? Seluruh kode QR kupon akan hangus dan terhapus total. Ini adalah aksi destruktif untuk qurban tahun depan.
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setIsDeleteAllConfirmOpen(false)}
+                      disabled={massActionLoading}
+                      className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleDeleteAllKupons}
+                      disabled={massActionLoading}
+                      className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs cursor-pointer flex items-center justify-center"
+                    >
+                      {massActionLoading ? <Loader2 className="animate-spin w-4.5 h-4.5 text-white" /> : 'YA, HAPUS SEMUA'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================================================= */}
+            {/* MODAL 6: INDIVIDUAL QR CODE VIEW */}
+            {/* ================================================= */}
+            {isQrModalOpen && qrCodeDataUrl && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl w-full max-w-sm p-6 relative flex flex-col shadow-2xl items-center text-center">
+                  <button
+                    onClick={() => setIsQrModalOpen(false)}
+                    className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                    <QrCode className="w-6 h-6" />
+                  </div>
+
+                  <h3 className="text-md font-black text-slate-850 dark:text-white mb-1">
+                    Kupon QR Code #{formData.nomor}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-5">
+                    Penerima: <strong className="text-slate-700 dark:text-slate-200">{formData.nama || 'EXTRA'}</strong>
+                  </p>
+
+                  <div className="border border-slate-200 dark:border-slate-800 p-3 rounded-2xl bg-white mb-6">
+                    <img
+                      src={qrCodeDataUrl}
+                      alt={`QR Code Kupon ${formData.nomor}`}
+                      className="w-48 h-48"
+                    />
+                    <div className="mt-2 font-mono text-xs font-black text-slate-500 uppercase tracking-widest">
+                      {formData.id.substring(0, 8)}...
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full">
+                    <button
+                      onClick={() => setIsQrModalOpen(false)}
+                      className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                    <a
+                      href={qrCodeDataUrl}
+                      download={`QR_Kupon_${formData.nomor}_${formData.nama || 'EXTRA'}.png`}
+                      className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black rounded-xl text-xs cursor-pointer flex items-center justify-center gap-2 text-center"
+                    >
+                      Unduh QR
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
     </DashboardLayout>
   );
 }

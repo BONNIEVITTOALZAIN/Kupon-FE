@@ -169,4 +169,22 @@ export const api = {
     if (!result.success) throw new Error(result.message);
     return result;
   },
+
+  async resetAllKuponsStatus(token: string | null) {
+    const res = await fetchWithAuth('/kupons/reset-status', token, {
+      method: 'POST',
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+    return result;
+  },
+
+  async deleteAllKupons(token: string | null) {
+    const res = await fetchWithAuth('/kupons/delete-all', token, {
+      method: 'POST',
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+    return result;
+  },
 };
