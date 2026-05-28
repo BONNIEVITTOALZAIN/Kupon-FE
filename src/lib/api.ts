@@ -187,4 +187,15 @@ export const api = {
     if (!result.success) throw new Error(result.message);
     return result;
   },
+
+  // AI Assistant Chat
+  async sendAssistantChat(token: string | null, message: string): Promise<string> {
+    const res = await fetchWithAuth('/assistant/chat', token, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+    return result.data.reply;
+  },
 };

@@ -15,6 +15,7 @@ import {
   X,
   Compass,
   Users,
+  Bot,
 } from 'lucide-react';
 
 interface SidebarLinkProps {
@@ -54,6 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/kupons', label: 'Manajemen Kupon', icon: <Ticket className="w-5 h-5" /> },
     { href: '/print', label: 'Print Kupon', icon: <Printer className="w-5 h-5" /> },
     { href: '/users', label: 'Kelola Panitia', icon: <Users className="w-5 h-5" /> },
+    { href: '/dashboard/assistant', label: 'AI Assistant', icon: <Bot className="w-5 h-5" /> },
   ];
 
   const currentYearM = new Date().getFullYear();
@@ -99,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href={link.href}
               icon={link.icon}
               label={link.label}
-              active={pathname === link.href}
+              active={link.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(link.href)}
               onClick={() => setSidebarOpen(false)}
             />
           ))}
